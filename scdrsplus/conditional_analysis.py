@@ -861,9 +861,18 @@ def run_conditional_analysis_and_save(
         independent_cols=independent_cols,
     )
 
+    ctrl_cols = [c for c in df_scores.columns if str(c).startswith("ctrl_norm_score_")]
     out_file = out_folder / f"{score_basename}.conditional.tagging_score.gz"
-    df_scores.to_csv(out_file, compression="gzip", sep="\t")
-    print(f"[main] Saved conditional tagging scores -> {out_file}")
+    if include_ctrl_score and ctrl_cols:
+        keep_cols = [c for c in df_scores.columns if c not in ctrl_cols]
+        df_scores.loc[:, keep_cols].to_csv(out_file, compression="gzip", sep="\t")
+        out_file_full = out_folder / f"{score_basename}.conditional_score_full.gz"
+        df_scores.to_csv(out_file_full, compression="gzip", sep="\t")
+        print(f"[main] Saved conditional tagging scores (without ctrl columns) -> {out_file}")
+        print(f"[main] Saved conditional full scores (with ctrl columns) -> {out_file_full}")
+    else:
+        df_scores.to_csv(out_file, compression="gzip", sep="\t")
+        print(f"[main] Saved conditional tagging scores -> {out_file}")
 
     if ablation:
         # (1) WLS / no ridge
