@@ -10,13 +10,6 @@ import scipy.sparse as sp
 
 import scdrs.pp as pp
 
-try:
-    import magic
-    import scprep
-except Exception:
-    magic = None
-    scprep = None
-
 
 def ensure_csr_inplace(adata: sc.AnnData) -> sc.AnnData:
     if sp.issparse(adata.X):
@@ -313,8 +306,11 @@ def run_imputation(adata: sc.AnnData, *, imputation: Optional[str]) -> float:
         return 0.0
 
     if imp == "magic":
-        if magic is None or scprep is None:
-            raise ImportError("Packages 'magic' and 'scprep' are required for imputation='magic'.")
+        try:
+            import magic
+            import scprep
+        except Exception as e:
+            raise ImportError("Packages 'magic' and 'scprep' are required for imputation='magic'.") from e
         print("[main] MAGIC imputation...")
         X = adata.X
         if sp.issparse(X):
@@ -323,8 +319,40 @@ def run_imputation(adata: sc.AnnData, *, imputation: Optional[str]) -> float:
         magic_op = magic.MAGIC(n_jobs=-1, t="auto", random_state=0, verbose=1)
         adata.X = magic_op.fit_transform(X, genes="all_genes")
         print("[main] MAGIC done.")
+    elif imp == "scvi":
+        try:
+            import scvi
+        except Exception as e:
+            raise ImportError("Package 'scvi-tools' is required for imputation='scvi'.") from e
+        print("[main] scVI denoising...")
+        scvi.model.SCVI.setup_anndata(adata)
+        model = scvi.model.SCVI(adata)
+        model.train()
+        adata.X = model.get_normalized_expression(return_numpy=True)
+        print("[main] scVI done.")
+    elif imp == "dca":
+        try:
+            from scanpy.external.pp import dca
+        except Exception as e:
+            raise ImportError("scanpy with external.pp.dca support is required for imputation='dca'.") from e
+        print("[main] DCA denoising...")
+        dca(adata, copy=False)
+        print("[main] DCA done.")
+    elif imp == "alra":
+        try:
+            import alra
+        except Exception as e:
+            raise ImportError("Package 'alra' is required for imputation='alra'.") from e
+        print("[main] ALRA denoising...")
+        X = adata.X.toarray() if sp.issparse(adata.X) else np.asarray(adata.X)
+        alra_out = alra.alra(X)
+        if isinstance(alra_out, tuple):
+            adata.X = alra_out[0]
+        else:
+            adata.X = alra_out
+        print("[main] ALRA done.")
     else:
-        raise ValueError(f"Unknown imputation={imputation} (expected magic|none)")
+        raise ValueError(f"Unknown imputation={imputation} (expected magic|none|scvi|dca|alra)")
 
     return time.perf_counter() - t0
 

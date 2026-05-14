@@ -16,7 +16,11 @@ from scdrsplus.data_processing import (
     aggregate_expression_by_metacell,
 )
 from scdrsplus.gene_sets import build_gene_set_and_controls, compute_v_var_ratio_c2t
-from scdrsplus.marginal_analysis import run_marginal_analysis, save_marginal_results
+from scdrsplus.marginal_analysis import (
+    run_marginal_analysis,
+    save_marginal_results,
+    save_marginal_results_split_ctrl,
+)
 
 
 def normalize_optional_path(s: str) -> Optional[str]:
@@ -47,7 +51,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--imputation",
         default="magic",
-        choices=["magic", "none"],
+        choices=["magic", "none", "scvi", "dca", "alra"],
         help="Imputation applied after metacell assignment",
     )
     p.add_argument(
@@ -156,11 +160,18 @@ def run_pipeline(
         if "metacell" in adata.obs:
             df_marginal["metacell"] = adata.obs.loc[df_marginal.index, "metacell"].to_numpy()
 
-        trait_rec["save_marginal_s"] = save_marginal_results(
-            df_marginal,
-            out_folder=out_folder,
-            score_basename=score_basename,
-        )
+        if include_ctrl_score:
+            trait_rec["save_marginal_s"] = save_marginal_results_split_ctrl(
+                df_marginal,
+                out_folder=out_folder,
+                score_basename=score_basename,
+            )
+        else:
+            trait_rec["save_marginal_s"] = save_marginal_results(
+                df_marginal,
+                out_folder=out_folder,
+                score_basename=score_basename,
+            )
 
         conditional_seconds = run_conditional_analysis_and_save(
             metacell_data=metacell_data,

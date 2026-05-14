@@ -1,0 +1,11 @@
+numpy
+pandas
+scipy
+scanpy
+scdrs
+statsmodels
+magic-impute
+scprep
+scvi-tools
+dca
+alra

@@ -180,3 +180,23 @@ def save_marginal_results(df_marginal: pd.DataFrame, *, out_folder: Path, score_
     df_marginal.to_csv(marg_out_file, compression="gzip", sep="\t")
     print(f"[main] Saved marginal scores -> {marg_out_file}")
     return time.perf_counter() - t0
+
+
+def save_marginal_results_split_ctrl(
+    df_marginal: pd.DataFrame,
+    *,
+    out_folder: Path,
+    score_basename: str,
+) -> float:
+    t0 = time.perf_counter()
+    ctrl_cols = [c for c in df_marginal.columns if str(c).startswith("ctrl_norm_score_")]
+    keep_cols = [c for c in df_marginal.columns if c not in ctrl_cols]
+
+    marg_out_file = out_folder / f"{score_basename}.marginal_score.gz"
+    df_marginal.loc[:, keep_cols].to_csv(marg_out_file, compression="gzip", sep="\t")
+    print(f"[main] Saved marginal scores (without ctrl columns) -> {marg_out_file}")
+
+    marg_full_out_file = out_folder / f"{score_basename}.marginal_score_full.gz"
+    df_marginal.to_csv(marg_full_out_file, compression="gzip", sep="\t")
+    print(f"[main] Saved marginal full scores (with ctrl columns) -> {marg_full_out_file}")
+    return time.perf_counter() - t0
