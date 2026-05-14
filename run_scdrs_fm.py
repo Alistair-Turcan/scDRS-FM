@@ -6,8 +6,8 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from scdrsplus.conditional_analysis import run_conditional_analysis_and_save
-from scdrsplus.data_processing import (
+from scdrs_fm.conditional_analysis import run_conditional_analysis_and_save
+from scdrs_fm.data_processing import (
     apply_covariate_correction,
     compute_metacells,
     load_and_basic_process,
@@ -15,8 +15,8 @@ from scdrsplus.data_processing import (
     scdrs_preprocess,
     aggregate_expression_by_metacell,
 )
-from scdrsplus.gene_sets import build_gene_set_and_controls, compute_v_var_ratio_c2t
-from scdrsplus.marginal_analysis import (
+from scdrs_fm.gene_sets import build_gene_set_and_controls, compute_v_var_ratio_c2t
+from scdrs_fm.marginal_analysis import (
     run_marginal_analysis,
     save_marginal_results,
     save_marginal_results_split_ctrl,
@@ -34,7 +34,7 @@ def normalize_optional_path(s: str) -> Optional[str]:
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        prog="run_scdrs+.py",
+        prog="run_scdrs_fm.py",
         description="Metacell conditional tagging + marginal scDRS-like scores (+ sequential conditional independent signals).",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
