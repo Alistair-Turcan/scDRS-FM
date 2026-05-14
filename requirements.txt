@@ -6,6 +6,3 @@ scdrs
 statsmodels
 magic-impute
 scprep
-scvi-tools
-dca
-alra

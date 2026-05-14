@@ -319,30 +319,52 @@ def run_imputation(adata: sc.AnnData, *, imputation: Optional[str]) -> float:
         magic_op = magic.MAGIC(n_jobs=-1, t="auto", random_state=0, verbose=1)
         adata.X = magic_op.fit_transform(X, genes="all_genes")
         print("[main] MAGIC done.")
-    elif imp == "scvi":
+    elif imp == "knn":
         try:
-            import scvi
+            from sklearn.decomposition import PCA
+            from sklearn.neighbors import NearestNeighbors
         except Exception as e:
-            raise ImportError("Package 'scvi-tools' is required for imputation='scvi'.") from e
-        print("[main] scVI denoising...")
-        scvi.model.SCVI.setup_anndata(adata)
-        model = scvi.model.SCVI(adata)
-        model.train()
-        adata.X = model.get_normalized_expression(return_numpy=True)
-        print("[main] scVI done.")
-    elif imp == "dca":
-        try:
-            from scanpy.external.pp import dca
-        except Exception as e:
-            raise ImportError("scanpy with external.pp.dca support is required for imputation='dca'.") from e
-        print("[main] DCA denoising...")
-        dca(adata, copy=False)
-        print("[main] DCA done.")
+            raise ImportError("Package 'scikit-learn' is required for imputation='knn'.") from e
+
+        print("[main] kNN denoising (2k HVGs, 50 PCs, 15 neighbors)...")
+        sc.pp.highly_variable_genes(adata, n_top_genes=2000, subset=False)
+        hvg_mask = np.asarray(adata.var["highly_variable"].to_numpy(), dtype=bool)
+        if hvg_mask.sum() == 0:
+            raise RuntimeError("No highly variable genes were selected for imputation='knn'.")
+
+        X_hvg = adata[:, hvg_mask].X
+        if sp.issparse(X_hvg):
+            X_hvg = X_hvg.toarray()
+        else:
+            X_hvg = np.asarray(X_hvg)
+
+        n_cells = adata.n_obs
+        n_pcs = min(50, X_hvg.shape[1], n_cells)
+        if n_pcs < 1:
+            raise RuntimeError("Not enough cells/genes to compute PCA for imputation='knn'.")
+
+        pcs = PCA(n_components=n_pcs, random_state=0).fit_transform(X_hvg)
+        n_neighbors = min(15, n_cells)
+        nn = NearestNeighbors(n_neighbors=n_neighbors, metric="euclidean")
+        nn.fit(pcs)
+        nbr_idx = nn.kneighbors(return_distance=False)
+
+        rows = np.repeat(np.arange(n_cells), n_neighbors)
+        cols = nbr_idx.reshape(-1)
+        data = np.full(rows.shape[0], 1.0 / n_neighbors, dtype=np.float32)
+        W = sp.csr_matrix((data, (rows, cols)), shape=(n_cells, n_cells))
+
+        X_all = adata.X.tocsr() if sp.issparse(adata.X) else np.asarray(adata.X)
+        adata.X = W @ X_all
+        print("[main] kNN done.")
     elif imp == "alra":
         try:
-            import alra
-        except Exception as e:
-            raise ImportError("Package 'alra' is required for imputation='alra'.") from e
+            import alra  # package import name in some installs
+        except Exception:
+            try:
+                import pyalra as alra  # pyALRA git install module name
+            except Exception as e:
+                raise ImportError("Package 'pyALRA' is required for imputation='alra'.") from e
         print("[main] ALRA denoising...")
         X = adata.X.toarray() if sp.issparse(adata.X) else np.asarray(adata.X)
         alra_out = alra.alra(X)
@@ -352,7 +374,7 @@ def run_imputation(adata: sc.AnnData, *, imputation: Optional[str]) -> float:
             adata.X = alra_out
         print("[main] ALRA done.")
     else:
-        raise ValueError(f"Unknown imputation={imputation} (expected magic|none|scvi|dca|alra)")
+        raise ValueError(f"Unknown imputation={imputation} (expected magic|none|alra|knn)")
 
     return time.perf_counter() - t0
 
