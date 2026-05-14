@@ -51,7 +51,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--imputation",
         default="magic",
-        choices=["magic", "none", "scvi", "dca", "alra"],
+        choices=["magic", "none", "alra", "knn"],
         help="Imputation applied after metacell assignment",
     )
     p.add_argument(
