@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 
-from scdrsplus.decompose_gradients import run_decomposition
+from scdrs_fm.decompose_gradients import run_decomposition
 
 
 def parse_args() -> argparse.Namespace:
