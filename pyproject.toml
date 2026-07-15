@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scdrs-fm"
+version = "0.1.0"
+description = "Metacell and feature-module extensions for scDRS-style single-cell disease-relevance scoring"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+authors = [{name = "scDRS-FM contributors"}]
+keywords = ["single-cell", "scRNA-seq", "GWAS", "scDRS", "AnnData", "Scanpy"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+  "numpy",
+  "pandas",
+  "scipy",
+  "scanpy",
+  "scdrs",
+  "statsmodels",
+  "magic-impute",
+  "scprep",
+  "tqdm",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+notebooks = ["jupyter", "ipykernel", "matplotlib", "seaborn"]
+
+[project.scripts]
+scdrs-fm = "run_scdrs_fm:main"
+scdrs-fm-decompose = "run_decompose_gradients:main"
+
+[tool.setuptools]
+py-modules = ["run_scdrs_fm", "run_decompose_gradients"]
+packages = ["scdrs_fm"]
