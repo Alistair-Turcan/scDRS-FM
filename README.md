@@ -1,17 +1,7 @@
 # scDRS-FM
 
-**scDRS-FM** extends [scDRS](https://github.com/martinjzhang/scDRS) (single-cell
-disease-relevance scoring) with **imputation** (MAGIC / ALRA / kNN) and a
-**metacell-based conditional analysis** that re-scores disease relevance at the level
-of small groups of transcriptomically similar cells. This yields two complementary
-readouts per trait:
-
-- **Marginal scores** — a disease-relevance score for **every cell** (this is the
-  standard scDRS-style output).
-- **Conditional (tagging) scores** — a disease-relevance score for each **metacell**,
-  with the "independent signal" of each metacell after conditioning out structure
-  shared across metacells. A signal that survives here is robust, not driven by a few
-  outlier cells.
+**scDRS-FM** identifies disease-critical cell populations by integrating GWAS with scRNA-seq using **imputation** to increase power and a
+**conditional analysis** that conditions cell populations on each other to identify those with independent disease associations.
 
 This README documents installation, the command-line interface, the input/output file
 formats, performance characteristics, and a runnable toy example. It is based on
