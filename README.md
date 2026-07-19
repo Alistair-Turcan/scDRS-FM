@@ -285,7 +285,4 @@ scDRS-FM-main/
 
 ## 10. Citation & license
 
-- **scDRS-FM** builds on **scDRS** (Zhang et al., *Nature Genetics* 2022;
-  <https://github.com/martinjzhang/scDRS>). Please cite scDRS when using this tool.
-- Imputation uses **MAGIC** (van Dijk et al., *Cell* 2018).
 - See [`LICENSE`](LICENSE) for license terms.
